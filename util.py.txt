@@ -1,0 +1,21 @@
+class Errors:
+    def __init__(self):
+        self.unexpected = []
+        self.unordered = 0
+
+    def unex(self, seq):
+        self.unordered += 1
+        self.unexpected.append(seq)
+
+    def losses(self):
+        return str(len(self.unexpected))
+
+    def unord(self):
+        return str(self.unordered)
+
+
+class UdpMessage:
+    def __init__(self, m_type, payload, sequence):
+        self.m_type = m_type
+        self.payload = payload
+        self.sequence = sequence

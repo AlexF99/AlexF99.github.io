@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redes 2 - Relatório</title>
+</head>
+<body>
+    <header>
+        <h1>Redes 2 - Relatório do projeto 1</h1>
+        <h2>Alexandre Freitas e Lewis Guilherme</h2>
+    </header>
+    <div>
+        <h2>Stream</h2>
+        <p>
+            Todos os clientes conectados ao servidor recebem continuamente a posição do mouse da máquina
+            que está executando o servidor. Assim, o cliente abre uma tela que irá exibir em qual posição
+            o mouse do servidor está a cada instânte.
+        </p>
+        <div style="display: flex; flex-direction: row;">
+            <figure>
+                <img src="server.gif" style="width: 700px;">
+                <figcaption>Servidor enviando posições do cursor para os clientes</figcaption>
+            </figure>
+            <figure>
+                <img src="client.gif" style="width: 700px;">
+                <figcaption>Cliente recebendo e atualizando a posição do cursor na tela</figcaption>
+            </figure>
+        </div>
+    </div>
+    <div>
+        <h2>Arquivos</h2>
+        <ul>
+            <li> <a href="./server.py.txt">servidor</a> </li>
+            <li> <a href="./client.py.txt">cliente</a> </li>
+            <li> <a href="./util.py.txt">util</a> </li>
+        </ul>
+    </div>
+    <div>
+        <h2>Arquivos</h2>
+        <h2>util.py</h2>
+        <p>
+            O arquivo "util.py" define classes que executam tarefas específicas (e.g classe Errors), visando aumentar a
+            legibilidade e a coesão do código, e também classes que abstraem conceitos para maior facilidade do uso dos mesmos
+            (e.g classe Message).<br/>
+        </p>
+        <h3>Message</h3>
+        <p>
+            A classe "Message" abstrai o conceito de mensagem, que é utilizada pelo socket UDP para fazer a comunicação
+            entre cliente e servidor. A classe possui 3 campos: "m_type" que indica qual o tipo da mensagem, podendo ser "SUB"
+            para solicitar a conexão com o servidor, "UNSUB" para solicitar a desconexão com o servidor, "MSG" para indicar
+            que a mensagem carrega dados, "ACK" para o servidor indicar ao cliente que a conexão foi estabelecida, "WAIT" para
+            o servidor indicar ao cliente que o mesmo foi colocado em uma fila de espera, e "QEND" para indicar que o stream de
+            dados foi encerrado. Já o campo "payload" carrega os dados que são enviados por mensagens do tipo "MSG". E por fim, o
+            campo "sequence" indica o número de sequência da mensagem.
+        </p>
+        <h3>Errors</h3>
+        <p>
+            A classe "Errors" define operações e atributos para a detecção de erros durante a transmissão dos dados, identificando
+            e contando quais mensagens foram perdidas e quais mensagens chegaram fora de ordem.
+        </p>
+        <h2>server.py</h2>
+        <p>
+            O servidor começa sua execução criando um socket UDP e o associando à uma porta, e em seguida defindo suas configurações, tais como, 
+            funcionamento dos logs e limite máximo de clientes simultâneos. Também, são mantidas uma lista de clientes ativos conectados e uma lista
+            de espera, sendo a segunda para manter o endereço de clientes que solicitaram conexão em um momento no qual o limite máximo de clientes 
+            foi atingido, e tendo seu funcionamento igual à uma fila.
+        </p>
+        <p>
+            Então, o servidor passa a ouvir em sua porta, esperando por solicitações de conexão ou desconexão que chegam em forma de mensagens. Ao chegar 
+            uma mensagem com o "m_type" igual a "SUB" o servidor primeiramente verifica se o limite de clientes já foi atingido, se isso não ocorreu então
+            o endereço do cliente solicitante é adicionado à lista de clientes e o mesmo passa a receber a stream de dados, caso contrário o cliente é adicionado
+            à uma fila de espera, na qual irá aguardar até que um outro cliente se desconecte do servidor liberando uma vaga. Sendo assim, ao chegar uma
+            mensagem com o "m_type" igual a "UNSUB" o servidor remove o cliente solicitante da lista de clientes ativos e este não receberá mais a stream de dados,
+            em seguida é verificado se existe um cliente aguardando sua vez na fila de espera, caso exista, é examinado se o tempo que o cliente está aguardando é
+            maior que o tempo máximo de espera definido pelo "client.py", se isso for verdade o cliente não será adicionado à lista de clientes ativos, pois o
+            mesmo já não estará mais em execução, em contradição a isso, se o tempo for menor que o máximo definido o cliente passa a receber a stream de dados.
+        </p>
+        <p>
+            Dessa forma, quando o primeiro cliente é conectado o servidor inicia um thread para o envio dos dados, utilizando de bibliotecas externas para a obtenção das
+            posições do cursor, e então iterando sobre a lista de clientes para encaminhá-los as posições, que são enviadas atráves do "payload" de mensagens com o 
+            "m_type" igual a "MSG". A thread principal mantém-se ativa durante toda a execução do programa, ouvindo e gerenciando solicitações.
+        </p>
+        <p>
+            Por fim, caso seja solicitado o encerramento do servidor através do terminal (Ctrl + c), o servidor envia para todos os clientes uma mensagem com o "m_type" definido
+            como "QEND", para informá-los que a stream de dados será encerrada. 
+
+        </p>
+        <figure>
+            <img src="./server.png" style="width: 500px;"/>
+            <figcaption>Funcionamento do servidor</figcaption>
+        </figure>
+        <h2>client.py</h2>
+        <p>
+            O cliente inicia sua execução, assim como o server, criando um socket UDP para ouvir e transmitir na rede. Depois disso, ele tenta conectar ao servidor, realizando 10 tentativas espaçadas por 1 segundo.
+            Se o server responder o pedido de conexão com "ACK", o cliente segue o fluxo de execução para o recebimento do stream, caso receba um wait, significa que o server já está mandando o stream para o máximo de clientes
+            e o cliente ficará esperando por um determinado tempo até tentar se conectar novamente. Caso não receba nenhuma resposta do servidor, o cliente finalizará.
+        </p>
+        <p>
+            Quando há sucesso na conexão com o server, antes de começar a receber os pacotes da rede, o cliente inicia uma thread chamada tkRender, que utiliza a biblioteca Tkinter para renderizar uma pequena tela com as mesmas
+            proporções de um monitor full hd (1920x1080) reduzida em 3 vezes, ou seja, 640x360. Essa tela é atualizada a cada 5ms com as novas coordenadas vindas da rede, mostrando ao vivo no cliente a posição do mouse na tela do servidor.
+        </p>
+        <p>Durante o recebimento do stream, que ocorre no fluxo principal do programa, o cliente vai atualizando uma matriz que corresponde a regiões na tela para que, ao fim da execução,
+            seja possível determinar quantas mensagens foram recebidas correspondendo aquela região da tela. Além disso, também vai detectando mensagens que cheguem fora de ordem e as registrando utilizando a classe Errors.
+        </p>
+        <p>
+            O cliente pode ser finalizado de algumas formas:
+            <ul>
+                <li>Quando o servidor é desligado e manda uma mensagem com o campo m_type = "QEND";</li>
+                <li>Quando o cliente não recebe nada por 5 segundos (via timeout);</li>
+                <li>Quando o próprio cliente finaliza, utilizando ctrl+c no terminal, enviando uma mensagem ao servidor para ser removido da lista de clientes;</li>
+            </ul>
+            Sempre que o cliente finaliza, uma rotina de finalização é chamada, e esta mostra todas as estatísticas geradas durante a execução: o heatmap das regiões da tela, erros de sequência e pacotes perdidos.
+        </p>
+        <figure>
+            <img src="./client.svg" style="width: 500px;"/>
+            <figcaption>Funcionamento do cliente</figcaption>
+        </figure>
+    </div>
+</body>
+</html>

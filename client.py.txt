@@ -1,0 +1,243 @@
+import socket
+import pickle
+import random
+import threading
+import signal
+import sys
+import os
+import logging
+import matplotlib.pyplot as plt
+import numpy as np
+from util import *
+from tkinter import *
+from tkinter import ttk
+
+# Recebe informacoes sobre a maquina local e o servidor, abre o socket udp
+myIp = socket.gethostbyname(socket.gethostname())
+serverAddr = ("127.0.1.1", 2175)
+udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Configuracoes para a criacao de logs
+logging.basicConfig(
+    level=logging.INFO,
+    filename=f"client-{os.getpid()}.log",
+    filemode="w",
+    format="%(asctime)s - %(levelname)s: %(message)s",
+    datefmt="%d/%m/%y %H:%M:%S",
+)
+
+logging.info("Iniciando o cliente")
+
+
+port = None
+numTries = 0
+wait = False
+
+# Constantes do programa
+MAX_WAIT_TIME = 60
+WIDTH = 640
+HEIGHT = 360
+
+# Mapa de calor usado ao final da execucao do programa
+heatmap = np.array(
+    [
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+    ]
+)
+
+# Executa o laco ate que consiga "bind" o socket em uma porta
+while port == None:
+    port = random.randrange(2176, 2276)
+    logging.info(f"Tentando conexao com a porta %d", port)
+    try:
+        udpsocket.bind((myIp, port))
+    except:
+        port = None
+    numTries += 1
+    if numTries > 50:
+        logging.error("Impossivel se conectar a uma porta")
+        quit()
+
+logging.info("Conectado com a porta %d", port)
+udpsocket.settimeout(1)
+
+# Gera a mensagem de "subscribe" para se conectar ao servidor
+subscribeMsg = UdpMessage("SUB", None, None)
+
+# Faz 10 tentativas de se conectar ao servidor, com um intervalo de 1 segundo para cada tentativa
+for i in range(10):  # subscribe to server
+    logging.warning(f"Tentando conectar-se ao servidor. Tentativa %d", i)
+    udpsocket.sendto(pickle.dumps(subscribeMsg), serverAddr)
+    try:
+        # Espera receber um ack como confirmacao de conexao
+        data, addr = udpsocket.recvfrom(4096)
+        res = pickle.loads(data)
+        print(res.m_type)
+        if res.m_type == "ACK" and addr[0] == serverAddr[0]:
+            logging.info("Conectado ao servidor")
+            break
+        # Se receber uma mensagem do tipo wait significa que a conexao chegou ao servidor,
+        # entretanto o número maximo de clientes conectados ao servidor foi atingido, o client
+        # ira aguardar chegar sua vez de se conectar esperando no maximo MAX_WAIT_TIME segundos
+        if res.m_type == "WAIT" and addr[0] == serverAddr[0]:
+            logging.warning(
+                f"Servidor cheio, voce foi adicionado a fila de espera. Aguarde sua vez... (Tempo de espera maximo: {MAX_WAIT_TIME} segundos)"
+            )
+            print(
+                f"Servidor cheio, voce foi adicionado a fila de espera. Aguarde sua vez... (Tempo de espera maximo: {MAX_WAIT_TIME} segundos)"
+            )
+            udpsocket.settimeout(MAX_WAIT_TIME)
+            wait = True
+            break
+    except:
+        continue
+
+# Recebeu uma mensagem do tipo wait, esta aguardando sua vez de se conectar
+while wait:
+    try:
+        res = pickle.loads(udpsocket.recv(4096))
+    except socket.timeout:
+        logging.error("MAX_WAIT_TIME atingido. Fechando conexao")
+        print("Tempo de espera maxima atingido, tente novamente mais tarde.")
+        quit()
+    if res.m_type == "ACK" and addr[0] == myIp:
+        logging.info("Conectado ao servidor")
+        break
+
+udpsocket.settimeout(10)
+totalCounter = 0
+errs = Errors()
+
+
+# Funcao chamada ao final da execucao do client, gera estatisticas sobre os dados e sobre a rede
+def clientFinish(signal, frame):
+    # Envia uma mensagem de "unsubscribe" para o servidor
+    unsubMsg = UdpMessage("UNSUB", None, None)
+    udpsocket.sendto(pickle.dumps(unsubMsg), serverAddr)
+
+    # Estatisticas sobre os dados
+    logging.info("Stream de dados encerrada.")
+    logging.info("Gerando estatisiticas da transmissao.")
+    print("Estatisticas da transmissao:")
+    print(f"Total de mensagens recebidas: {totalCounter}\n")
+
+    # Estatisticas sobre a rede
+    print("\nMonitoramento da Rede:")
+    print(f"{errs.losses()} pacotes perdidos")
+    print(f"{errs.unord()} pacotes fora de ordem")
+
+    # Renderiza o mapa de calor de pontos mais acessados da tela
+    global heatmap
+    heatmap = np.array(heatmap)
+    fig, ax = plt.subplots()
+    ax.xaxis.set_label_position("top")
+    im = ax.imshow(heatmap)
+
+    ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+
+    ax.set_xticks(np.arange(len(heatmap[0])), labels=range(len(heatmap[0])))
+    ax.set_yticks(np.arange(len(heatmap)), labels=range(len(heatmap)))
+
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+    for i in range(len(heatmap)):
+        for j in range(len(heatmap[i])):
+            text = ax.text(j, i, heatmap[i, j], ha="center", va="center", color="w")
+
+    ax.set_title("Regioes mais acessadas da tela")
+    fig.tight_layout()
+    plt.show()
+
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, clientFinish)
+
+firstSeq = 0
+totalCounter = 0
+
+
+# Funcao que renderiza a tela utilizada
+def tkRender():
+    global x
+    global y
+    global root
+
+    def move():
+        global heatmap
+        labelMouse.place(x=x / 3, y=y / 3)
+        root.after(5, move)
+
+    def onClose():
+        print("Para fechar aperte Ctrl + C")
+
+    root = Tk()
+    root.geometry(f"{WIDTH}x{HEIGHT}")
+    root.protocol("WM_DELETE_WINDOW", onClose)
+    labelMouse = ttk.Label(root, text="<-")
+
+    move()
+    root.mainloop()
+
+
+x, y = (0, 0)
+tkThread = threading.Thread(target=tkRender, daemon=True)
+tkThread.start()
+
+# Laco principal do programa, recebe os dados do servidor
+while True:
+    try:
+        packet = udpsocket.recv(2048)
+        data = pickle.loads(packet)
+        seq = data.sequence
+
+        if seq != -1:
+            x, y = data.payload
+            print(x, y)
+            # Atualiza a contagem do heatmap
+            xdiv = len(heatmap[0])
+            ydiv = len(heatmap)
+            found = False
+            for i in range(xdiv):
+                xmin = 1920 * (i) / xdiv
+                xmax = 1920 * (i + 1) / xdiv
+                for j in range(ydiv):
+                    ymin = 1080 * (j) / ydiv
+                    ymax = 1080 * (j + 1) / ydiv
+                    if x >= xmin and x < xmax and y >= ymin and y < ymax:
+                        heatmap[j][i] += 1
+                        found = True
+                        break
+
+                if found:
+                    break
+
+        else:
+            clientFinish(None, None)
+            break
+
+        if firstSeq == 0:
+            firstSeq = seq
+            expectedSeq = firstSeq + 1
+            logging.info("Primeira mensagem recebida")
+        else:
+            if expectedSeq != seq:
+                logging.error(
+                    "%d: sequencia inesperada, era esperado %d", seq, expectedSeq
+                )
+                errs.unex(seq)
+            expectedSeq += 1
+
+        if seq in errs.unexpected:
+            logging.warning("Sequencia %d fora de ordem", seq)
+            errs.unexpected.remove(seq)
+
+        totalCounter += 1
+
+    except socket.timeout:
+        clientFinish(None, None)
+        break

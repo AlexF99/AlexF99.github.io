@@ -1,0 +1,137 @@
+import socket
+import time
+import pickle
+import threading
+import signal
+import sys
+from util import *
+from datetime import datetime
+import pyautogui
+import logging
+
+# Configuracoes para a criacao de logs
+logging.basicConfig(
+    level=logging.INFO,
+    filename="server.log",
+    filemode="w",
+    format="%(asctime)s - %(levelname)s: %(message)s",
+    datefmt="%d/%m/%y %H:%M:%S",
+)
+
+# Recebe informacoes da maquina, abre o socket e faz o bind na porta 2175
+hp = socket.gethostbyname(socket.gethostname())
+udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udpsocket.bind((hp, 2175))
+
+clientAddrs = []
+waitQueue = []
+maxClients = 3
+streamThread = None
+streamStarted = False
+
+now = datetime.now()
+print("Servidor iniciado")
+logging.info("Servidor iniciado")
+logging.info("Capacidade maxima de conexoes simultâneas: %s", maxClients)
+
+timegap = 0.05
+if len(sys.argv) > 1:
+    print(sys.argv)
+    timegap = float(sys.argv[1])
+
+
+# Adiciona um client na lista de clients do servidor, inicia a thread de envio de stream
+def connect_client(caddr):
+    global streamThread
+    global streamStarted
+    clientAddrs.append(caddr)
+    ack = UdpMessage("ACK", None, 0)
+    udpsocket.sendto(pickle.dumps(ack), caddr)
+    logging.info("Cliente %s adicionado a lista de clientes", caddr)
+    if not streamStarted:
+        streamThread = threading.Thread(target=stream, daemon=True)
+        streamThread.start()
+        streamStarted = True
+
+
+msgSeq = 1
+
+
+# Envia para todos os clients conectados o stream de dados
+def stream():
+    logging.info("Enviando mensagens para clientes conectados")
+    global msgSeq
+
+    while True:
+        # Posicao (x,y) do mouse na tela do servidor
+        x, y = pyautogui.position()
+
+        buffer = (x, y)
+
+        message = UdpMessage("MSG", buffer, msgSeq)
+        msgSeq += 1
+        time.sleep(timegap)
+        for addr in clientAddrs:
+            udpsocket.sendto(pickle.dumps(message), addr)
+
+
+# Intercepta um sinal de fim do programa, envia para todos os clients que o servidor ira encerrar
+def signal_handler(signal, frame):
+    global streamThread
+    global msgSeq
+    logging.warning("Encerrando servidor.")
+    endMsg = UdpMessage("QEND", b"", -1)
+    for addr in clientAddrs:
+        udpsocket.sendto(pickle.dumps(endMsg), addr)
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
+
+if __name__ == "__main__":
+    logging.info("Aguardando conexoes...")
+    while True:
+        bufIn, caddr = udpsocket.recvfrom(1024)
+        data = pickle.loads(bufIn)
+        # Um cliente solicitou conectar-se com o servidor
+        if data.m_type == "SUB":
+            logging.info(
+                "\nSolicitacao de conexao encontrada, %s deseja conectar-se", caddr
+            )
+
+            # Verifica se o limite de clientes conectados foi atingido
+            if len(clientAddrs) < maxClients:
+                connect_client(caddr)
+            else:
+                logging.error(
+                    "Nao foi possível conectar %s. Limite de clientes atingido.", caddr
+                )
+                logging.warning("Adicionando %s a fila de espera", caddr)
+
+                # Envia uma mensagem para o cliente informando-o que ele foi colocado em uma fila de espera
+                wait = UdpMessage("WAIT", None, None)
+                udpsocket.sendto(pickle.dumps(wait), caddr)
+
+                # Adiciona o cliente na fila de espera
+                waitQueue.append({"caddr": caddr, "time": time.time()})
+
+        # Um cliente solicitou desconectar-se do servidor
+        if data.m_type == "UNSUB":
+            clientAddrs.remove(caddr)
+            logging.warning("Cliente %s desconectado", caddr)
+
+            # Verifica se exitem clientes aguardando para serem conectados
+            while len(waitQueue) > 0:
+                # Remove o primeiro cliente da fila e o conecta ao servidor
+                client = waitQueue.pop(0)
+
+                if (time.time() - client["time"]) < 60:
+                    logging.info("Removendo %s da lista de espera", client["caddr"])
+                    connect_client(client["caddr"])
+                    break
+                else:
+                    logging.warning(
+                        "%s atingiu tempo limite maximo de espera", client["caddr"]
+                    )
+
+udpsocket.close()
