@@ -1,0 +1,8 @@
+08/11/23 16:58:48 - INFO: Iniciando o cliente
+08/11/23 16:58:48 - INFO: Tentando conexao com a porta 2209
+08/11/23 16:58:48 - INFO: Conectado com a porta 2209
+08/11/23 16:58:48 - WARNING: Tentando conectar-se ao servidor. Tentativa 0
+08/11/23 16:58:48 - INFO: Conectado ao servidor
+08/11/23 16:58:48 - INFO: Primeira mensagem recebida
+08/11/23 17:00:49 - INFO: Stream de dados encerrada.
+08/11/23 17:00:49 - INFO: Gerando estatisiticas da transmissao.

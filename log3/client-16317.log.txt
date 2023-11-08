@@ -1,0 +1,9 @@
+08/11/23 17:00:34 - INFO: Iniciando o cliente
+08/11/23 17:00:34 - INFO: Tentando conexao com a porta 2237
+08/11/23 17:00:34 - INFO: Conectado com a porta 2237
+08/11/23 17:00:34 - WARNING: Tentando conectar-se ao servidor. Tentativa 0
+08/11/23 17:00:34 - WARNING: Servidor cheio, voce foi adicionado a fila de espera. Aguarde sua vez... (Tempo de espera maximo: 60 segundos)
+08/11/23 17:00:37 - INFO: Conectado ao servidor
+08/11/23 17:00:37 - INFO: Primeira mensagem recebida
+08/11/23 17:00:46 - INFO: Stream de dados encerrada.
+08/11/23 17:00:46 - INFO: Gerando estatisiticas da transmissao.

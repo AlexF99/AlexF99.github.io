@@ -1,0 +1,8 @@
+08/11/23 17:00:28 - INFO: Iniciando o cliente
+08/11/23 17:00:28 - INFO: Tentando conexao com a porta 2242
+08/11/23 17:00:28 - INFO: Conectado com a porta 2242
+08/11/23 17:00:28 - WARNING: Tentando conectar-se ao servidor. Tentativa 0
+08/11/23 17:00:28 - INFO: Conectado ao servidor
+08/11/23 17:00:29 - INFO: Primeira mensagem recebida
+08/11/23 17:00:54 - INFO: Stream de dados encerrada.
+08/11/23 17:00:54 - INFO: Gerando estatisiticas da transmissao.

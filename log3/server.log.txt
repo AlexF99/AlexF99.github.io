@@ -1,0 +1,33 @@
+08/11/23 16:58:35 - INFO: Servidor iniciado
+08/11/23 16:58:35 - INFO: Capacidade maxima de conexoes simultâneas: 3
+08/11/23 16:58:35 - INFO: Aguardando conexoes...
+08/11/23 16:58:38 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2213) deseja conectar-se
+08/11/23 16:58:38 - INFO: Cliente ('10.254.225.19', 2213) adicionado a lista de clientes
+08/11/23 16:58:38 - INFO: Enviando mensagens para clientes conectados
+08/11/23 16:58:42 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2199) deseja conectar-se
+08/11/23 16:58:42 - INFO: Cliente ('10.254.225.19', 2199) adicionado a lista de clientes
+08/11/23 16:58:48 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2209) deseja conectar-se
+08/11/23 16:58:48 - INFO: Cliente ('10.254.225.19', 2209) adicionado a lista de clientes
+08/11/23 16:58:56 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2212) deseja conectar-se
+08/11/23 16:58:56 - ERROR: Nao foi possível conectar ('10.254.225.19', 2212). Limite de clientes atingido.
+08/11/23 16:58:56 - WARNING: Adicionando ('10.254.225.19', 2212) a fila de espera
+08/11/23 17:00:13 - WARNING: Cliente ('10.254.225.19', 2213) desconectado
+08/11/23 17:00:13 - WARNING: ('10.254.225.19', 2212) atingiu tempo limite maximo de espera
+08/11/23 17:00:28 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2242) deseja conectar-se
+08/11/23 17:00:28 - INFO: Cliente ('10.254.225.19', 2242) adicionado a lista de clientes
+08/11/23 17:00:34 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2237) deseja conectar-se
+08/11/23 17:00:34 - ERROR: Nao foi possível conectar ('10.254.225.19', 2237). Limite de clientes atingido.
+08/11/23 17:00:34 - WARNING: Adicionando ('10.254.225.19', 2237) a fila de espera
+08/11/23 17:00:37 - WARNING: Cliente ('10.254.225.19', 2199) desconectado
+08/11/23 17:00:37 - INFO: Removendo ('10.254.225.19', 2237) da lista de espera
+08/11/23 17:00:37 - INFO: Cliente ('10.254.225.19', 2237) adicionado a lista de clientes
+08/11/23 17:00:46 - WARNING: Cliente ('10.254.225.19', 2237) desconectado
+08/11/23 17:00:49 - WARNING: Cliente ('10.254.225.19', 2209) desconectado
+08/11/23 17:00:54 - WARNING: Cliente ('10.254.225.19', 2242) desconectado
+08/11/23 17:01:40 - WARNING: Encerrando servidor.

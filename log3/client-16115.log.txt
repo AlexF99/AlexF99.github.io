@@ -1,0 +1,6 @@
+08/11/23 16:58:56 - INFO: Iniciando o cliente
+08/11/23 16:58:56 - INFO: Tentando conexao com a porta 2212
+08/11/23 16:58:56 - INFO: Conectado com a porta 2212
+08/11/23 16:58:56 - WARNING: Tentando conectar-se ao servidor. Tentativa 0
+08/11/23 16:58:56 - WARNING: Servidor cheio, voce foi adicionado a fila de espera. Aguarde sua vez... (Tempo de espera maximo: 60 segundos)
+08/11/23 16:59:56 - ERROR: MAX_WAIT_TIME atingido. Fechando conexao

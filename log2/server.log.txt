@@ -1,0 +1,17 @@
+08/11/23 16:56:40 - INFO: Servidor iniciado
+08/11/23 16:56:40 - INFO: Capacidade maxima de conexoes simultâneas: 3
+08/11/23 16:56:40 - INFO: Aguardando conexoes...
+08/11/23 16:56:44 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2266) deseja conectar-se
+08/11/23 16:56:44 - INFO: Cliente ('10.254.225.19', 2266) adicionado a lista de clientes
+08/11/23 16:56:44 - INFO: Enviando mensagens para clientes conectados
+08/11/23 16:56:55 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2182) deseja conectar-se
+08/11/23 16:56:55 - INFO: Cliente ('10.254.225.19', 2182) adicionado a lista de clientes
+08/11/23 16:57:14 - INFO: 
+Solicitacao de conexao encontrada, ('10.254.225.19', 2219) deseja conectar-se
+08/11/23 16:57:14 - INFO: Cliente ('10.254.225.19', 2219) adicionado a lista de clientes
+08/11/23 16:57:22 - WARNING: Cliente ('10.254.225.19', 2266) desconectado
+08/11/23 16:57:26 - WARNING: Cliente ('10.254.225.19', 2182) desconectado
+08/11/23 16:57:29 - WARNING: Cliente ('10.254.225.19', 2219) desconectado
+08/11/23 16:57:34 - WARNING: Encerrando servidor.

@@ -1,0 +1,8 @@
+08/11/23 16:55:22 - INFO: Iniciando o cliente
+08/11/23 16:55:22 - INFO: Tentando conexao com a porta 2183
+08/11/23 16:55:22 - INFO: Conectado com a porta 2183
+08/11/23 16:55:22 - WARNING: Tentando conectar-se ao servidor. Tentativa 0
+08/11/23 16:55:22 - INFO: Conectado ao servidor
+08/11/23 16:55:22 - INFO: Primeira mensagem recebida
+08/11/23 16:55:29 - INFO: Stream de dados encerrada.
+08/11/23 16:55:29 - INFO: Gerando estatisiticas da transmissao.
