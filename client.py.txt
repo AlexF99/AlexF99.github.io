@@ -14,7 +14,7 @@ from tkinter import ttk
 
 # Recebe informacoes sobre a maquina local e o servidor, abre o socket udp
 myIp = socket.gethostbyname(socket.gethostname())
-serverAddr = ("127.0.1.1", 2175)
+serverAddr = ("10.254.225.19", 2175)
 udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Configuracoes para a criacao de logs
@@ -68,6 +68,8 @@ udpsocket.settimeout(1)
 # Gera a mensagem de "subscribe" para se conectar ao servidor
 subscribeMsg = UdpMessage("SUB", None, None)
 
+connected = False
+
 # Faz 10 tentativas de se conectar ao servidor, com um intervalo de 1 segundo para cada tentativa
 for i in range(10):  # subscribe to server
     logging.warning(f"Tentando conectar-se ao servidor. Tentativa %d", i)
@@ -79,6 +81,7 @@ for i in range(10):  # subscribe to server
         print(res.m_type)
         if res.m_type == "ACK" and addr[0] == serverAddr[0]:
             logging.info("Conectado ao servidor")
+            connected = True
             break
         # Se receber uma mensagem do tipo wait significa que a conexao chegou ao servidor,
         # entretanto o número maximo de clientes conectados ao servidor foi atingido, o client
@@ -106,11 +109,8 @@ while wait:
         quit()
     if res.m_type == "ACK" and addr[0] == myIp:
         logging.info("Conectado ao servidor")
+        connected = True
         break
-
-udpsocket.settimeout(10)
-totalCounter = 0
-errs = Errors()
 
 
 # Funcao chamada ao final da execucao do client, gera estatisticas sobre os dados e sobre a rede
@@ -139,8 +139,11 @@ def clientFinish(signal, frame):
 
     ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
-    ax.set_xticks(np.arange(len(heatmap[0])), labels=range(len(heatmap[0])))
-    ax.set_yticks(np.arange(len(heatmap)), labels=range(len(heatmap)))
+    ax.set_xticks(np.arange(len(heatmap[0])))
+    ax.set_yticks(np.arange(len(heatmap)))
+
+    ax.set_xticklabels(range(len(heatmap[0])))
+    ax.set_yticklabels(range(len(heatmap)))
 
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
@@ -155,10 +158,16 @@ def clientFinish(signal, frame):
     sys.exit(0)
 
 
+if not connected and not wait:
+    logging.error("não foi possivel conectar ao servidor, encerrando...")
+    clientFinish(None, None)
+
 signal.signal(signal.SIGINT, clientFinish)
 
 firstSeq = 0
 totalCounter = 0
+udpsocket.settimeout(5)
+errs = Errors()
 
 
 # Funcao que renderiza a tela utilizada

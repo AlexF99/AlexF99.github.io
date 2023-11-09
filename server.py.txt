@@ -117,8 +117,9 @@ if __name__ == "__main__":
 
         # Um cliente solicitou desconectar-se do servidor
         if data.m_type == "UNSUB":
-            clientAddrs.remove(caddr)
-            logging.warning("Cliente %s desconectado", caddr)
+            if caddr in clientAddrs:
+                clientAddrs.remove(caddr)
+                logging.warning("Cliente %s desconectado", caddr)
 
             # Verifica se exitem clientes aguardando para serem conectados
             while len(waitQueue) > 0:
@@ -134,4 +135,5 @@ if __name__ == "__main__":
                         "%s atingiu tempo limite maximo de espera", client["caddr"]
                     )
 
+# fechando socket
 udpsocket.close()
