@@ -1,0 +1,5 @@
+deps:
+	pip3 install pyautogui
+	pip3 install matplotlib
+	pip3 install numpy
+
